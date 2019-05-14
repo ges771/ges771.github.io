@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>A simple map</title>
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.js'></script>
+<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css' rel='stylesheet' />
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/alasql@0.3.9/dist/alasql.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.1.1/mapbox-gl-geocoder.min.js'></script>
+<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.1.1/mapbox-gl-geocoder.css' type='text/css' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 25%;
+            width: 100%;
+        }
+
+        .mapbox-maplogo {
+            position: absolute;
+            display: block;
+            height: 20px;
+            width: 65px;
+            left: 10px;
+            bottom: 10px;
+            text-indent: -9999px;
+            z-index: 99999;
+            overflow: hidden;
+            background-image:
+
+    </style>
+</head>
+<body>
+    <style>
+        .logoclass {
+            height: 70px;
+            padding: 20px;
+        }
+
+        @media screen and (max-width:740px) {
+            .logoclass {
+                height: 50px;
+                padding: 10px;
+            }
+        }
+
+        @media screen and (max-width:480px) {
+            .logoclass {
+                height: 30px;
+                padding: 10px;
+            }
+        }
+
+        #geocoder-container {
+            position: absolute;
+            background: rgb(229, 229, 229);
+            top: 70%;
+            /*this is the search bar */
+            width: 100%;
+            /* margin-top: 10px; */
+        }
+
+        #geocoder-container>div {
+            min-width: 50%;
+            margin-left: 25%;
+        }
+
+        #features {
+            position: absolute;
+            top: 73%;
+            left: 0;
+            bottom: 0;
+            width: 99%;
+            /*  max-width: 300px; */
+            overflow: auto;
+            background: rgb(255, 255, 255);
+            padding: 10px;
+            font-family: 'Lato', sans-serif;
+            font-size: 12px;
+        }
+
+        .mapboxgl-popup {
+            max-width: 400px;
+            font: 12px/20px Lato;
+        }
+
+        .marker-title {
+            font-weight: 700;
+        }
+
+
+        ul {
+            display: flex;
+            flex-direction: row;
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: rgba(116, 67, 27, 1);
+            font-family: 'Lato', sans-serif;
+        }
+
+        li {
+            float: left;
+            border-right: 1px solid #e7e7e7;
+        }
+
+        li a,
+        .dropbtn {
+            display: block;
+            color: #ffffff;
+            text-align: center;
+            padding: 10px 14px;
+            text-decoration: none;
+            font-family: 'Lato', sans-serif;
+            font-size: 90%;
+        }
+
+        li a:hover:not(.active) {
+            background-color: #f9f9f9;
+            color: #000000;
+        }
+
+        li a:hover,
+        .dropdown:hover .dropbtn {
+            background-color: #E7CBAB;
+            color: #000000;
+        }
+
+        .active {
+            background-color: rgba(172, 118, 56, 1);
+        }
+
+        .heightfix {
+            height: 100%;
+            color: #ffffff;
+        }
+
+        li.dropdown {
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #E7CBAB;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            font-family: 'Lato', sans-serif;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            font-family: 'Lato', sans-serif;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ffffff;
+        }
+
+        .dropdown .dropbtn {
+            border: none;
+            outline: none;
+            color: white;
+            padding: 12px 16px;
+            background-color: inherit;
+            font-family: inherit;
+            margin: 0;
+            border-right: 1px solid #e7e7e7;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+            z-index: 1000;
+        }
+
+    </style>
+    <div id="button"></div>
+    <div id='map'>
+    <script>
+            mapboxgl.accessToken = 'pk.eyJ1Ijoibm92b2dyYWRhYyIsImEiOiJjaWtwd3JseGIxNGlwdHpqN3M1aDh1MDFjIn0.EKpUq0uTKTizL-bhjwQCDQ';
+    </script>
+        
+        <ul class="topnav" id="ulclass">
+        <li><a id="HTCitem" style="height:100%;" href="javascript:void(0);" onclick="addNavLayer_htcs('htc-data-03-12-19','labels-htc-data-03-12-19');">Display All Historic Tax Credit Projects</a></li>
+            
+        <li><a id="CMFitem" style="height:100%;" href="javascript:void(0);" onclick="addNavLayer_cmf('CMFdata2019-2j13gm','CMFdata2019-2j13gm');">Display CMF Projects</a></li>
+            
+        <li><a id="CongItem" href="javascript:void(0);" onclick="addNavLayer_congressd('116-congress-dems','116-congress-repubs','116-cong-centroid','116-congress-vacant');">Select by Congressional District</a></li>
+        <li><a id="StateItem" href="javascript:void(0);" onclick="addNavLayer_states('states');">Select by State</a></li>
+        <li><a id="PrintItem" class="heightfix" href="javascript:void(0);" onclick="printmap();">Download Map Image</a></li>
+        <li><a id="CSVItem" class="heightfix" href="javascript:void(0);" onclick="buttoncsv();">Download to CSV</a></li>
+        <div class="dropdown">
+            <button class="dropbtn" style="background-color:rgba(116, 67, 27, 1)">Additional Layers
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="#" onclick="toggle_DDA();">2019 Difficult Development Areas (LIHTC)</a>
+                <a href="#" onclick="toggle_QCT();">2019 Qualified Census Tracts (LIHTC)</a>
+                <a href="#" onclick="toggle_NMTC();">NMTC Eligible Census Tracts</a>
+            </div>
+        </div>
+        <li><a id="ClearMapItem" class="heightfix" href="javascript:void(0);" onclick="clearmap();">Clear Map</a></li>
+    </ul>
+    </div>
+    <pre id="features"></pre>   
+    <script>
+        var script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js";
+        document.getElementsByTagName('head')[0].appendChild(script);
+        mapboxgl.accessToken = 'pk.eyJ1Ijoibm92b2dyYWRhYyIsImEiOiJjaWtwd3JseGIxNGlwdHpqN3M1aDh1MDFjIn0.EKpUq0uTKTizL-bhjwQCDQ#10.3/30.068130/-90.123349/108';
+
+        /*
+        $("#features").hide();
+        */
+        if (!mapboxgl.supported()) {
+            alert('Your browser does not support Mapbox GL');
+        } else {
+            var map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/novogradac/cjvcgkoppelkv1fs3uo1ug3q5',
+                zoom: 4,
+                center: [-98.5795, 39.8282],
+                preserveDrawingBuffer: 'true',
+            });
+        }
+
+        //custom geocoder
+
+        var geocoder = new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken
+        });
+        map.addControl(geocoder, "bottom-right");
+
+        $("ul a").click(function() {
+            $(this).toggleClass("active");
+
+        });
+
+        map.on('load', function() {
+
+            $("#hidebox").click(function() {
+                // assumes element with id='button'
+                $("#features").fadeToggle("slow");
+            });
+
+            document.getElementById('features').innerHTML = '<h3>' + 'Zoom In To Display Data  ' + '</h3>'
+            <!-- add HTC source -->
+            map.addSource('htc-src-proj-data', {
+                "type": "vector",
+                "url": 'mapbox://novogradac.8dlawwx8',
+            });
+
+            //DDA Metro
+            map.addSource('DDA-metro', {
+                "type": "vector",
+                "url": 'mapbox://novogradac.boibfydh',
+            });
+
+            map.addLayer({
+                "id": "DDA_metro",
+                "type": "fill",
+                "source": "DDA-metro",
+                "source-layer": "2019_Metro_DDA-4qk1pf",
+                "paint": {
+                    "fill-outline-color": "#808080",
+                    "fill-color": "#e49f15",
+                    "fill-opacity": 0.4,
+                },
+                "layout": {
+                    "visibility": "none"
+                },
+
+            });
+
+            //CMF data
+            map.addSource('CMFdata2019-2j13gm', {
+                "type": "vector",
+                "url": 'mapbox://novogradac.bk7z82nl',
+});
+            map.addLayer({
+                "id": "CMFdata2019-2j13gm",
+                "type": "circle",
+                "url": "mapbox://novogradac.bk7z82nl",
+                "source": "CMFdata2019-2j13gm",
+                "source-layer": "CMFdata2019-2j13gm",
+                "paint": {
+                    "circle-radius":2.5,
+                    "circle-color":"#6b8e2f",
+                    "circle-opacity": .95,
+                },
+                "layout": {
+                    "visibility": "visible",                
+                },
+
+            });
+
+
+            
+            //DDA Non-Metro
+            map.addSource('DDA-non-metro', {
+                "type": "vector",
+                "url": 'mapbox://novogradac.d913zc5k',
+            });
+
+            map.addLayer({
+                "id": "DDA_non_metro",
+                "type": "fill",
+                "source": "DDA-non-metro",
+                "source-layer": "2019_Non-Metro_DDA-1m2dde",
+                "paint": {
+                    "fill-outline-color": "#808080",
+                    "fill-color": "#e49f15",
+                    "fill-opacity": 0.4,
+                },
+                "layout": {
+                    "visibility": "none"
+                },
+
+            });
+            //QCT
+            map.addSource('QCT', {
+                "type": "vector",
+                "url": 'mapbox://novogradac.243huhsy',
+            });
+
+            map.addLayer({
+                "id": "QCT-layer",
+                "type": "fill",
+                "source": "QCT",
+                "source-layer": "QCT2019-9i1wzj",
+                "paint": {
+                    "fill-outline-color": "#808080",
+                    "fill-color": "#bf6728",
+                    "fill-opacity": 0.4,
+                },
+                "layout": {
+                    "visibility": "none"
+                },
+
+            });
+
+            //NMTC Census Tracts
+            map.addSource('NMTC', {
+                "type": "vector",
+                "url": 'mapbox://novogradac.07xdnw4m',
+            });
+
+            map.addLayer({
+                "id": "NMTC-layer",
+                "type": "fill",
+                "source": "NMTC",
+                "source-layer": "NMTC_basic_eligible-bbiaqy",
+                "paint": {
+                    "fill-outline-color": "#808080",
+                    "fill-color": "#6e0c2a",
+                    "fill-opacity": 0.4,
+                },
+                "layout": {
+                    "visibility": "none"
+                },
+
+            });
+
+
+            /*<!-- add htc layers -->*/
+
+            map.addLayer({
+                "id": "htc-data-03-12-19",
+                "type": "circle",
+                "source": "htc-src-proj-data",
+                "source-layer": "HTCdata2019-a3rgcz",
+                "layout": {
+                    "visibility": "none",
+                },
+
+                "paint": {
+                    "circle-radius": 2.83,
+                    "circle-color": "#74441c",
+                    "circle-opacity": 0.75
+                },
+            });
+
+            map.addLayer({
+                "id": "labels-htc-data-03-12-19",
+                "type": "symbol",
+                "source": "htc-src-proj-data",
+                "source-layer": "HTCdata2019-a3rgcz",
+                "layout": {
+                    "visibility": "none",
+                    "text-size": {
+                        "base": 1,
+                        "stops": [
+                            [
+                                0,
+                                8
+                            ],
+                            [
+                                11,
+                                14
+                            ],
+                            [
+                                15,
+                                16
+                            ]
+                        ]
+                    },
+                    "symbol-spacing": 250,
+                    "text-font": [
+                        "Lato Bold",
+                        "Arial Unicode MS Regular"
+                    ],
+                    "symbol-placement": "point",
+                    "text-justify": "left",
+                    "visibility": "none",
+                    "text-rotation-alignment": "viewport",
+                    "text-anchor": "bottom-left",
+                    "text-keep-upright": true,
+                    "text-field": "{Building Name}",
+                    "text-letter-spacing": 0
+                },
+                "paint": {
+                    "text-color": "#74441c",
+                    "text-opacity": 0.95,
+                    "text-halo-width": 1,
+                    "text-halo-color": "hsla(0, 0%, 100%, 0.8)"
+                },
+
+            });
+
+            /*<!-- add congress-dems -->*/
+
+            map.addSource('116-congress-src', {
+                "type": "vector",
+                "url": 'mapbox://novogradac.06vjdee9',
+            });
+
+            map.addLayer({
+                "id": "116-congress-dems",
+                "type": "fill",
+                "source": "116-congress-src",
+                "source-layer": "116thCongress-0cxfjh",
+                "filter": [
+                    "==",
+                    "PARTY",
+                    "Democrat"
+                ],
+                "layout": {
+                    "visibility": "none"
+                },
+                "paint": {
+                    "fill-color": "#369",
+                    "fill-outline-color": "hsla(0, 0%, 0%, 0.75)",
+                    "fill-opacity": .45,
+                },
+
+            });
+
+            map.addLayer({
+                "id": "116-congress-repubs",
+                "type": "fill",
+                "source": "116-congress-src",
+                "source-layer": "116thCongress-0cxfjh",
+                "filter": [
+                    "==",
+                    "PARTY",
+                    "Republican"
+                ],
+                "layout": {
+                    "visibility": "none"
+                },
+                "paint": {
+                    "fill-color": "hsl(4, 100%, 53%)",
+                    "fill-opacity": .25,
+                    "fill-outline-color": "hsla(0, 0%, 0%, 0.75)",
+                },
+
+            });
+
+            map.addLayer({
+                "id": "116-congress-vacant",
+                "type": "fill",
+                "source": "116-congress-src",
+                "source-layer": "116thCongress-0cxfjh",
+                "filter": [
+                    "==",
+                    "PARTY",
+                    "Vacant"
+                ],
+                "layout": {
+                    "visibility": "none"
+                },
+                "paint": {
+                    "fill-color": "#808080",
+                    "fill-opacity": .25,
+                    "fill-outline-color": "hsla(0, 0%, 0%, 0.75)",
+                },
+
+            });
+
+
+            /*<!-- add states -->*/
+            map.addSource('states-src', {
+                "type": "vector",
+                "url": 'mapbox://novogradac.1ilfm7uz',
+            });
+
+            map.addLayer({
+                "id": "states",
+                "type": "fill",
+                "source": 'states-src',
+                "source-layer": "States",
+                "filter": [
+                    "==",
+                    "$type",
+                    "Polygon"
+                ],
+                "layout": {
+                    "visibility": "visible"
+                },
+                "paint": {
+                    "fill-color": "hsla(0, 0%, 100%, 0)",
+                    "fill-opacity": 0.75,
+                    "fill-outline-color": "hsla(0, 0%, 2%, 0.09)"
+                },
+            });
+
+            map.addSource('116-cong-dems-orig', {
+                "type": "vector",
+                "url": 'mapbox://novogradac.06vjdee9',
+            });
+
+            map.addLayer({
+                "id": "cong-highlighted",
+                "type": "fill",
+                "source": "116-cong-dems-orig",
+                "source-layer": "116thCongress-0cxfjh",
+                "paint": {
+                    "fill-outline-color": "#484896",
+                    "fill-color": "#6e599f",
+                    "fill-opacity": .000011,
+                },
+
+            });
+            map.addSource('states-orig', {
+                "type": "vector",
+                "url": 'mapbox://novogradac.1ilfm7uz',
+            });
+
+
+            map.addLayer({
+                "id": "states-highlighted",
+                "type": "fill",
+                "source": "states-orig",
+                "source-layer": "States",
+                "paint": {
+                    "fill-outline-color": "#000000",
+                    "fill-color": "#0066ff",
+                    "fill-opacity": .000001,
+                },
+
+            });
+
+
+            /*add 116thcongress centroids*/
+
+            map.addSource('116-congress-centroid-src', {
+                "type": "vector",
+                "url": 'mapbox://novogradac.6qtkjq8o',
+            });
+
+            map.addLayer({
+                "id": "116-cong-centroid",
+                "type": "symbol",
+                "source": "116-congress-centroid-src",
+                "source-layer": "116_Centroid-aaokr3",
+                /* "minzoom": 7,*/
+                "layout": {
+                    "text-field": "{NAME} | {PARTY}",
+                    "text-size": {
+                        "base": 1,
+                        "stops": [
+                            [
+                                0,
+                                12
+                            ],
+                            [
+                                22,
+                                22
+                            ]
+                        ]
+                    },
+                    "text-font": [
+                        "Lato Bold",
+                        "Arial Unicode MS Regular"
+                    ],
+                    "visibility": "none"
+                },
+                "paint": {
+                    "text-opacity": 0.8,
+                    "text-halo-color": "hsla(0, 0%, 100%, 0.7)",
+                    "text-halo-width": 1
+                },
+
+            });
+
+
+
+            map.addSource('htc-highlighted-src', {
+                "type": "vector",
+                "url": 'mapbox://novogradac.8dlawwx8',
+            });
+
+            map.addLayer({
+                "id": "htc-highlighted",
+                "type": "circle",
+                "source": "htc-highlighted-src",
+                "source-layer": "HTCdata2019-a3rgcz",
+                "layout": {
+                    "visibility": "none",
+                },
+                "paint": {
+                    "circle-radius": 2.5,
+                    "circle-color": "#74441c"
+                }
+            });
+
+            map.addLayer({
+                "id": "htc-highlighted-states",
+                "type": "circle",
+                "source": "htc-highlighted-src",
+                "source-layer": "HTCdata2019-a3rgcz",
+                "layout": {
+                    "visibility": "none",
+                },
+                "paint": {
+                    "circle-radius": 2.5,
+                    "circle-color": "#74441c"
+                }
+            });
+
+
+            map.addSource('single-point', {
+                "type": "geojson",
+                "data": {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+            });
+
+            map.addLayer({
+                "id": "point",
+                "source": "single-point",
+                "type": "circle",
+                "paint": {
+                    "circle-radius": 7,
+                    "circle-color": "#007cbf"
+                }
+            });
+
+            //load HTC projects
+            //'htc-data-03-12-19','labels-htc-data-03-12-19'
+            // map.setLayoutProperty('htc-data-03-12-19', 'visibility', 'none');
+            // map.setLayoutProperty('labels-htc-data-03-12-19', 'visibility', 'none');
+            //close the info box
+
+            // Listen for the `geocoder.input` event that is triggered when a user
+            // makes a selection and add a marker that matches the result.
+            geocoder.on('result', function(ev) {
+                map.getSource('single-point').setData(ev.result.geometry);
+            });
+
+            /*<!-- clear map to start -->*/
+            clearmap();
+            $("#ClearMapItem").toggleClass("active");
+            /*<!-- set map zoom -->*/
+
+            map.setLayerZoomRange("labels-htc-data-03-12-19", 11, 22);
+
+        });
+        //delete elements if they are empty
+
+        var props_nmtc = [];
+
+
+        map.on('mousemove', function(e) {
+            //if zoom equal...
+            if (map.getZoom() > 10) {
+
+                var featurespoint = map.queryRenderedFeatures(e.point, {
+                    layers: ['labels-htc-data-03-12-19']
+                });
+                // Change the cursor style as a UI indicator. put this on in sepereate mousmove function and add e.point,
+                map.getCanvas().style.cursor = (featurespoint.length) ? 'pointer' : '';
+            }
+
+        });
+
+        window.onload = function() {
+            map.on('mousemove', function(e) {
+                if (map.getLayer('CMFdata2019-2j13gm')) {
+                    var features = map.queryRenderedFeatures({
+                        layers: ['CMFdata2019-2j13gm']
+                    })
+                };
+
+
+                if (map.getLayer('htc-data-03-12-19')) {
+                    var features = map.queryRenderedFeatures({
+                        layers: ['htc-data-03-12-19']
+                    })
+                };
+
+                if (map.getLayer('116-congress-dems')) {
+                    var featurescong = map.queryRenderedFeatures({
+                        layers: ['116-congress-dems', '116-congress-repubs', '116-congress-vacant']
+                    })
+                };
+
+                if (map.getLayer('cong-highlighted')) {
+                    var featurescong_high = map.queryRenderedFeatures({
+                        layers: ['cong-highlighted']
+                    });
+                    var featurecong_high = featurescong_high[0]
+                    var cong_high_vis = map.getLayoutProperty('cong-highlighted', 'visibility');
+                };
+
+                if (map.getLayer('htc-highlighted')) {
+                    var featureshtc_high = map.queryRenderedFeatures({
+                        layers: ['htc-highlighted']
+                    })
+                };
+
+                if (map.getLayer('states-highlighted')) {
+                    var features_states_high = map.queryRenderedFeatures({
+                        layers: ['states-highlighted']
+                    });
+                    var state_high_vis = map.getLayoutProperty('states-highlighted', 'visibility');
+                };
+
+                lyr_exist = map.getLayer('cong-highlighted');
+                lyr_exist_state = map.getLayer('state-highlighted');
+
+                /*console.log('Congress Highlighted Vis: ' + cong_high_vis);*/
+
+                if (map.getZoom() > 10 && cong_high_vis != "visible" && state_high_vis != "visible") {
+                    var jsonobjProj = JSON.stringify(features, null, 2);
+                    var newArrProj = JSON.parse(jsonobjProj);
+                    var propsProj = [];
+                    $.each(newArrProj, function(index, value) {
+                        if (value.properties["Building Name"] === '') {
+                            propsProj.push('Project Name Unavailable' + ' | ' + value.properties.Address);
+                        } else {
+                            propsProj.push(value.properties["Building Name"] + ' | ' + value.properties.Address);
+                        }
+                    });
+
+                    var jsonobjCong = JSON.stringify(featurescong, null, 2);
+                    var newArrCong = JSON.parse(jsonobjCong);
+                    var propsCong = [];
+
+                    $.each(newArrCong, function(index, value) {
+                        if (value.properties.NAME === '') {
+                            propsCong.push('Project Name Unavailable' + ' | ' + value.properties.PARTY);
+
+                        } else {
+                            propsCong.push(value.properties.NAME + ' | ' + value.properties.PARTY);
+                        }
+
+                    });
+                    propuniquecong = unique(propsCong);
+
+                    document.getElementById('features').innerHTML = '<h3>' + 'Historic Tax Credit Projects' + '</h3>' + propsProj.join('<br/>');
+                    //nested if to remove highlighted feature
+
+                } else if (cong_high_vis == "visible" && typeof lyr_exist === 'object' && featurescong_high != 'undefined' && features_states_high != 'undefined') {
+                    var jsonob_high_htc = JSON.stringify(featureshtc_high, null, 2);
+                    var newArr_high_htc = JSON.parse(jsonob_high_htc);
+                    var props_high_htc = [];
+                    $.each(newArr_high_htc, function(index, value) {
+                        if (value.properties["Building Name"] === '') {
+                            props_high_htc.push('Project Name Unavailable' + ' | ' + value.properties.Address);
+                        } else {
+                            props_high_htc.push(value.properties["Building Name"] + ' | ' + value.properties.Address);
+                        }
+                    });
+                    propuniquehtc_high = unique(props_high_htc);
+
+                    try {
+
+                        if (featurecong_high.properties.PARTY != "Vacant") {
+                            document.getElementById('features').innerHTML = '<h2>' + featurecong_high.properties.NAME + ' | ' + featurecong_high.properties.PARTY + '</h2>' +
+                                'District: ' + featurecong_high.properties.STATE_ABBR + ' ' + featurecong_high.properties.CDFIPS +
+                                '<h3>' + 'Projects In District' + '</h3>' +
+                                propuniquehtc_high.join('<br/>')
+                        } else {
+
+                            document.getElementById('features').innerHTML = '<h2>' + "Seat Vacant" +
+                                '</h2>' +
+                                'District: ' + featurecong_high.properties.STATE_ABBR + ' ' + featurecong_high.properties.CDFIPS +
+                                '<h3>' + 'Projects In District' + '</h3>' +
+                                propuniquehtc_high.join('<br/>')
+
+                        }
+                    } catch (e) {
+                        //Catch Statement
+                    }
+                } else if (state_high_vis == "visible" & cong_high_vis != "visible") {
+                    //zoom to state_high_vis
+                    var jsonob_high_htc = JSON.stringify(featureshtc_high, null, 2);
+                    var newArr_high_htc = JSON.parse(jsonob_high_htc);
+                    var props_high_htc = [];
+                    var props_high_htc_dollars = [];
+
+                    $.each(newArr_high_htc, function(index, value) {
+                        if (value.properties["Building Name"] === '') {
+                            props_high_htc.push('Project Name Unavailable' + ' | ' + value.properties.Address);
+                            props_high_htc_dollars.push(1);
+                        } else {
+                            props_high_htc.push(value.properties["Building Name"] + ' | ' + value.properties.Address);
+                            props_high_htc_dollars.push(value.properties["Final Estimated QRE"]);
+                        }
+                    });
+                    propuniquehtc_high = unique(props_high_htc);
+                    //console.log(props_high_htc_dollars);
+
+                    document.getElementById('features').innerHTML = '<h3>' + 'State Summary' + '</h3>' + '<h4>' + 'To see full State listing, download to CSV' + '</h4>' + '</br>' + 'Number of Projects: ' + numberWithCommas(propuniquehtc_high.length) + '</br>' +
+                        'Median Total Project Cost: $' + median(props_high_htc_dollars).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')
+
+                } else {
+                    document.getElementById('features').innerHTML = '<h3>' + 'Zoom In To Display Data ' + '</h3>' +
+                        '<h4>' + 'or Select Congressional District or State ' + '</h4>'
+                }
+            })
+        };
+
+        map.on('click', function(e) {
+            //query the project data
+            var features = map.queryRenderedFeatures(e.point, {
+                layers: ['labels-htc-data-03-12-19']
+            });
+            if (!features.length) {
+                return;
+            }
+            if (features.length) {
+                // Get coordinates from the symbol and center the map on those coordinates
+                map.flyTo({
+                    center: features[0].geometry.coordinates
+                });
+            }
+
+            var feature = features[0];
+            var popup = new mapboxgl.Popup()
+                .setLngLat(map.unproject(e.point))
+                .setHTML('<h2>' + feature.properties["Building Name"] + '</h2><p>' +
+                    'Total Project Cost:	$' + feature.properties["Final Estimated QRE"].toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + '<br>' +
+                    'WASO Number:	' + feature.properties["WASO#"] + '<br>' +
+                    'Part 3 Approval:	' + feature.properties["Part 3 Date"] + '<br>' + '<br>' +
+                    feature.properties.Address + '<br>' +
+                    feature.properties.City + ', ' + feature.properties["STFIPS"] + ' ' + feature.properties["ZIP"] + '<br>' + '<br>' +
+                    'Project Desc.:	' + feature.properties["Project details"] + '<br>' +
+                    //"Cong OBJ ID:" + feature.properties.OBJECTID + 
+                    '</p>')
+                .addTo(map);
+        });
+        
+    //CMFdata
+        map.on('click', function(e) {
+            //query the project data
+            var features = map.queryRenderedFeatures(e.point, {
+                layers: ['CMFdata2019-2j13gm']
+            });
+            if (!features.length) {
+                return;
+            }
+            if (features.length) {
+                // Get coordinates from the symbol and center the map on those coordinates
+                map.flyTo({
+                    center: features[0].geometry.coordinates
+                });
+            }
+
+            var feature = features[0];
+            var popup = new mapboxgl.Popup()
+                .setLngLat(map.unproject(e.point))
+                .setHTML('<h2>' + feature.properties["Building Name"] + '</h2><p>' +
+                    'Total Project Cost:	$' + feature.properties["Final Estimated QRE"].toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + '<br>' +
+                    'WASO Number:	' + feature.properties["WASO#"] + '<br>' +
+                    'Part 3 Approval:	' + feature.properties["Part 3 Date"] + '<br>' + '<br>' +
+                    feature.properties.Address + '<br>' +
+                    feature.properties.City + ', ' + feature.properties["STFIPS"] + ' ' + feature.properties["ZIP"] + '<br>' + '<br>' +
+                    'Project Desc.:	' + feature.properties["Project details"] + '<br>' +
+                    //"Cong OBJ ID:" + feature.properties.OBJECTID + 
+                    '</p>')
+                .addTo(map);
+        });
+
+
+        map.on('click', function(e) {
+            //query congressional districts
+            var features_loc_cong = map.queryRenderedFeatures(e.point, {
+                layers: ['116-congress-dems', '116-congress-repubs', '116-congress-vacant']
+            });
+
+            var feature_loc_cong_dem = features_loc_cong[0];
+
+            var cong_vis = map.getLayoutProperty('116-congress-dems', 'visibility');
+
+            var state_vis = map.getLayoutProperty('states', 'visibility');
+
+            if (cong_vis == "visible" && state_vis != "visible") {
+                if (features_loc_cong.length && feature_loc_cong_dem != 'undefined') {
+
+                    var ID_cong_dem = feature_loc_cong_dem.properties.DISTRICTID;
+                    //console.log(ID_cong_dem);
+                    map.setLayoutProperty('cong-highlighted', 'visibility', 'visible');
+                    map.setFilter('cong-highlighted', ['in', 'DISTRICTID', ID_cong_dem]);
+                    map.setPaintProperty('cong-highlighted', "fill-opacity", .55);
+                    map.setLayoutProperty('htc-highlighted', 'visibility', 'visible');
+                    map.setFilter('htc-highlighted', ['in', 'DISTRICTID', ID_cong_dem]);
+                    map.setLayoutProperty('116-cong-centroid', 'visibility', 'visible');
+                    map.setFilter('116-cong-centroid', ['in', 'DISTRICTID', ID_cong_dem]);
+                } else {
+                    return;
+                }
+            } else {
+                map.setLayoutProperty('cong-highlighted', 'visibility', 'none');
+                map.setLayoutProperty('htc-highlighted', 'visibility', 'none');
+                map.setLayoutProperty('116-cong-centroid', 'visibility', 'none');
+
+            }
+            //query states
+
+            var features_loc_states = map.queryRenderedFeatures(e.point, {
+                layers: ['states']
+            });
+            var feature_loc_cong_states = features_loc_states[0];
+            var state_vis = map.getLayoutProperty('states', 'visibility');
+            /*console.log('feature states: ' + feature_loc_cong_states);*/
+            if (state_vis == "visible") {
+                if (features_loc_states.length && feature_loc_cong_states != 'undefined') {
+
+                    var ID_state = feature_loc_cong_states.properties.ST_ABBREV;
+                    map.setLayoutProperty('states-highlighted', 'visibility', 'visible');
+                    map.setFilter('states-highlighted', ['in', 'ST_ABBREV', ID_state]);
+                    map.setPaintProperty('states-highlighted', "fill-opacity", .55);
+                    map.setLayoutProperty('htc-highlighted', 'visibility', 'visible');
+                    map.setFilter('htc-highlighted', ['in', 'STATE_ABBR', ID_state]);
+                } else {
+                    return;
+                }
+            } else {
+                map.setLayoutProperty('states-highlighted', 'visibility', 'none');
+            };
+            //query if the congression district is highlighted, then remove the other districts)
+
+            var conghighlightactive = map.getLayoutProperty('cong-highlighted', 'visibility');
+        });
+
+        function addNavLayer_htcs(id, id2) {
+            $("#CongItem").removeClass("active");
+            $("#StateItem").removeClass("active");
+            var visibility = map.getLayoutProperty(id, 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty(id, 'visibility', 'none');
+                map.setLayoutProperty(id2, 'visibility', 'none');
+            } else {
+                map.setLayoutProperty(id, 'visibility', 'visible');
+                map.setLayoutProperty(id2, 'visibility', 'visible');
+            }
+        }
+        function addNavLayer_cmf(id) {
+            var visibility = map.getLayoutProperty(id, 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty(id, 'visibility', 'none');
+            } else {
+                map.setLayoutProperty(id, 'visibility', 'visible');
+            }
+        }
+        function addNavLayer3(id, id2, id3) {
+            var visibility = map.getLayoutProperty(id, 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty(id, 'visibility', 'none');
+                map.setLayoutProperty(id2, 'visibility', 'none');
+                map.setLayoutProperty(id3, 'visibility', 'none');
+            } else {
+                map.setLayoutProperty(id, 'visibility', 'visible');
+                map.setLayoutProperty(id2, 'visibility', 'visible');
+                map.setLayoutProperty(id3, 'visibility', 'none');
+            }
+        }
+
+        function addNavLayer_congressd(id, id2, id3, id4) {
+            clearadditionallayers();
+            $("#HTCitem").removeClass("active");
+            $("#StateItem").removeClass("active");
+            map.setZoom(5);
+            map.setLayoutProperty('states-highlighted', 'visibility', 'none');
+            map.setLayoutProperty('states', 'visibility', 'none');
+            map.setLayoutProperty('htc-data-03-12-19', 'visibility', 'none');
+            var visibility = map.getLayoutProperty(id, 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty(id, 'visibility', 'none');
+                map.setLayoutProperty(id2, 'visibility', 'none');
+                map.setLayoutProperty(id3, 'visibility', 'none');
+                map.setLayoutProperty(id4, 'visibility', 'none');
+            } else {
+                map.setLayoutProperty(id, 'visibility', 'visible');
+                map.setLayoutProperty(id2, 'visibility', 'visible');
+                map.setLayoutProperty(id3, 'visibility', 'none');
+                map.setLayoutProperty(id4, 'visibility', 'visible');
+            }
+        }
+
+        function addNavLayer3_noclear(id, id2, id3) {
+            var visibility = map.getLayoutProperty(id, 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty(id, 'visibility', 'none');
+                map.setLayoutProperty(id2, 'visibility', 'none');
+                map.setLayoutProperty(id3, 'visibility', 'none');
+            } else {
+                map.setLayoutProperty(id, 'visibility', 'visible');
+                map.setLayoutProperty(id2, 'visibility', 'visible');
+                map.setLayoutProperty(id3, 'visibility', 'none');
+            }
+        }
+
+        function addNavLayer(id, id2) {
+            var visibility = map.getLayoutProperty(id, 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty(id, 'visibility', 'none');
+                map.setLayoutProperty(id2, 'visibility', 'none');
+            } else {
+                map.setLayoutProperty(id, 'visibility', 'visible');
+                map.setLayoutProperty(id2, 'visibility', 'visible');
+            }
+        }
+
+        function addNavLayer_states(id) {
+            clearadditionallayers();
+            $("#HTCitem").removeClass("active");
+            $("#CongItem").removeClass("active");
+            map.setZoom(4);
+            map.setLayoutProperty('htc-data-03-12-19', 'visibility', 'none');
+            map.setLayoutProperty('htc-highlighted', 'visibility', 'none');
+            map.setLayoutProperty('cong-highlighted', 'visibility', 'none');
+            map.setLayoutProperty('116-congress-dems', 'visibility', 'none');
+            map.setLayoutProperty('116-congress-repubs', 'visibility', 'none');
+            map.setLayoutProperty('116-congress-vacant', 'visibility', 'none');
+            map.setLayoutProperty('116-cong-centroid', 'visibility', 'none');
+            var visibility = map.getLayoutProperty(id, 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty(id, 'visibility', 'none');
+            } else {
+                map.setLayoutProperty(id, 'visibility', 'visible');
+            }
+        }
+
+        function toggle_DDA() {
+            var visibility = map.getLayoutProperty("DDA_metro", 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty("DDA_metro", 'visibility', 'none');
+            } else {
+                map.setLayoutProperty("DDA_metro", 'visibility', 'visible');
+            }
+
+            var visibility = map.getLayoutProperty("DDA_non_metro", 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty("DDA_non_metro", 'visibility', 'none');
+            } else {
+                map.setLayoutProperty("DDA_non_metro", 'visibility', 'visible');
+            }
+        };
+
+        function toggle_QCT() {
+            var visibility = map.getLayoutProperty("QCT-layer", 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty("QCT-layer", 'visibility', 'none');
+            } else {
+                map.setLayoutProperty("QCT-layer", 'visibility', 'visible');
+            }
+        };
+
+        function toggle_NMTC() {
+            var visibility = map.getLayoutProperty("NMTC-layer", 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty("NMTC-layer", 'visibility', 'none');
+            } else {
+                map.setLayoutProperty("NMTC-layer", 'visibility', 'visible');
+            }
+
+
+        }
+
+        function numberWithCommas(x) {
+            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function unique(array) {
+            return array.filter(function(el, index, arr) {
+                return index === arr.indexOf(el);
+            });
+        }
+
+        function buttoncsv() {
+            var features3 = map.queryRenderedFeatures({
+                layers: ['htc-highlighted']
+            });
+
+            var features2 = map.queryRenderedFeatures({
+                layers: ['htc-data-03-12-19']
+            });
+
+            var cong_high_vis = map.getLayoutProperty('cong-highlighted', 'visibility');
+            var states_high_vis = map.getLayoutProperty('states-highlighted', 'visibility');
+            var jsonobjProj2 = JSON.stringify(features2, null, 2);
+            var newArrProj2 = JSON.parse(jsonobjProj2);
+            var propsProj2 = [
+                ["Project Name", "Address", "City", "State", "Part 3 Approval Date", "Total Project Cost", "Project Description"]
+            ];
+            $.each(newArrProj2, function(index, value) {
+                if (value.properties["Building Name"] === '') {
+                    propsProj2.push(["No project name", value.properties.Address, value.properties.City, value.properties.STATE_ABBR, value.properties["Part 3 Date"], value.properties["Final Estimated QRE"], value.properties["Project details"]]);
+                    return propsProj2;
+                } else {
+                    propsProj2.push([value.properties["Building Name"], value.properties.Address, value.properties.City, value.properties.STATE_ABBR, value.properties["Part 3 Date"], value.properties["Final Estimated QRE"], value.properties["Project details"]]);
+                    return propsProj2;
+                }
+            });
+            //make sure that the original projects goes away when you click on a congressional district
+            var jsonobjProj3 = JSON.stringify(features3, null, 2);
+            var newArrProj3 = JSON.parse(jsonobjProj3);
+            //console.log(newArrProj3);
+            var propsProj3 = [
+                ["Project Name", "Address", "City", "State", "Part 3 Approval Date", "Total Project Cost", "Project Description"]
+            ];
+            $.each(newArrProj3, function(index, value) {
+                if (value.properties["Building Name"] === '') {
+                    propsProj3.push(["No project name", value.properties.Address, value.properties.City, value.properties.STATE_ABBR, value.properties["Part 3 Date"], value.properties["Final Estimated QRE"], value.properties["Project details"]]);
+                    return propsProj3;
+                } else {
+                    propsProj3.push([value.properties["Building Name"], value.properties.Address, value.properties.City, value.properties.STATE_ABBR, value.properties["Part 3 Date"], value.properties["Final Estimated QRE"], value.properties["Project details"]]);
+                    return propsProj3;
+                }
+            });
+            /* console.log("CONGRESS HIGHLIGHTED:");*/
+            /*console.log(features3);*/
+            if (propsProj2.length > 1 && cong_high_vis != "visible") {
+                alasql.promise('SELECT * INTO CSV("HTC-Projects-InMap.csv", {headers:false, separator:","}) FROM ?', [propsProj2]);
+            } else if (propsProj3.length > 1 && cong_high_vis === "visible") {
+                alasql.promise('SELECT * INTO CSV("HTC-Projects-CongressionalDistrict.csv", {headers:false, separator:","}) FROM ?', [propsProj3]);
+            } else if (propsProj3.length > 1 && states_high_vis === "visible") {
+                alasql.promise('SELECT * INTO CSV("HTC-Projects-ByState.csv", {headers:false, separator:","}) FROM ?', [propsProj3]);
+            } else {
+                window.alert("Please zoom in and Display Historic Tax Credit Properties");
+            };
+            $("#CSVItem").toggleClass("active");
+        }
+
+
+        function clearadditionallayers() {
+            displaylist = ["DDA_metro", "DDA_non_metro", "QCT-layer", "NMTC-layer"]
+
+            for (var i = 0; i < displaylist.length; i++) {
+                map.setLayoutProperty(displaylist[i], 'visibility', 'none');
+            }
+
+        }
+
+
+        function clearmap() {
+            $("ul a").removeClass("active");
+            $("#ClearMapItem").removeClass("active");
+            displaylist = ['CMFdata2019-2j13gm','htc-data-03-12-19', 'labels-htc-data-03-12-19', '116-congress-dems', '116-congress-repubs', 'states', 'states-highlighted', 'htc-highlighted', 'cong-highlighted', '116-cong-centroid', '116-congress-vacant']
+
+            for (var i = 0; i < displaylist.length; i++) {
+                map.setLayoutProperty(displaylist[i], 'visibility', 'none');
+            }
+            clearadditionallayers();
+            map.flyTo({
+                zoom: 4,
+                center: [
+                    -98.5795,
+                    39.8282
+                ],
+                speed: 2, // make the flying slow
+                curve: 1, // change the speed at which it zooms out
+            });
+            $("#ClearMapItem").toggleClass("active");
+
+        }
+
+        function printmap() {
+            /*<!-- var FileSaver = require('file-saver'); -->*/
+            var d = new Date();
+            var t = new Date();
+            var load = map.loaded();
+
+            /*<!-- console.log(load); -->*/
+            var data = this.map.getCanvas().toDataURL('image/png', 1.0);
+            /*<!-- console.log(data); -->*/
+            var blob = dataURLtoBlob(data);
+            /*<!-- console.log(blob); -->*/
+            saveAs(blob, 'Map - ' + d.toDateString() + " " + t.getHours() + ":" + t.getMinutes() + '.png');
+            $("#PrintItem").toggleClass("active");
+        }
+
+        function OpenInNewTab(url) {
+            var win = window.open(url, '_blank');
+            win.focus();
+        }
+
+        function median(values) {
+            values.sort(function(a, b) {
+                return a - b;
+            });
+
+            var half = Math.floor(values.length / 2);
+            if (values.length % 2)
+                return values[half];
+            else
+                return (values[half - 1] + values[half]) / 2.0;
+        }
+
+        function dataURLtoBlob(dataurl) {
+            var arr = dataurl.split(','),
+                mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[1]),
+                n = bstr.length,
+                u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], {
+                type: mime
+            });
+        }
+
+    </script>
+</body>
+</html>
