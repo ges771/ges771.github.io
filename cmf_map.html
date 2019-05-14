@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>Final Project GES 771</title>
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.js'></script>
+<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css' rel='stylesheet' />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/2.3.6/fabric.min.js"></script>
+<script type="text/javascript" src="http://cdn.jsdelivr.net/g/filesaver.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/alasql@0.3.9/dist/alasql.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.1.1/mapbox-gl-geocoder.min.js'></script>
+<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.1.1/mapbox-gl-geocoder.css' type='text/css' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 10%;
+            width: 100%;
+        }
+
+        .mapbox-maplogo {
+            position: absolute;
+            display: block;
+            height: 20px;
+            width: 65px;
+            left: 10px;
+            bottom: 10px;
+            text-indent: -9999px;
+            z-index: 99999;
+            overflow: hidden;
+
+            background-repeat: no-repeat;
+            background-position: 0 0;
+            background-size: 65px 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <style>
+
+
+
+        #features {
+            position: absolute;
+            top: 90%;
+            left: 0;
+            bottom: 0;
+            width: 99%;
+            /*  max-width: 300px; */
+            overflow: auto;
+            background: rgb(255, 255, 255);
+            padding: 10px;
+            font-family: 'Lato', sans-serif;
+            font-size: 12px;
+        }
+
+        .mapboxgl-popup {
+            max-width: 400px;
+            font: 12px/20px Lato;
+        }
+
+        .marker-title {
+            font-weight: 700;
+        }
+
+
+        ul {
+            display: flex;
+            flex-direction: row;
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: rgba(116, 67, 27, 1);
+            font-family: 'Lato', sans-serif;
+        }
+
+        li {
+            float: left;
+            border-right: 1px solid #e7e7e7;
+        }
+
+        li a,
+        .dropbtn {
+            display: block;
+            color: #ffffff;
+            text-align: center;
+            padding: 10px 14px;
+            text-decoration: none;
+            font-family: 'Lato', sans-serif;
+            font-size: 90%;
+        }
+
+        li a:hover:not(.active) {
+            background-color: #f9f9f9;
+            color: #000000;
+        }
+
+        li a:hover,
+        .dropdown:hover .dropbtn {
+            background-color: #E7CBAB;
+            color: #000000;
+        }
+
+        .active {
+            background-color: rgba(172, 118, 56, 1);
+        }
+
+        .heightfix {
+            height: 100%;
+            color: #ffffff;
+        }
+
+        li.dropdown {
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #E7CBAB;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            font-family: 'Lato', sans-serif;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            font-family: 'Lato', sans-serif;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ffffff;
+        }
+
+
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+            z-index: 1000;
+        }
+		.legend {
+			background-color: #fff;
+			border-radius: 2px;
+			bottom: 30px;
+			box-shadow: 0 1px 2px rgba(0,0,0,0.10);
+			font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+			padding: 10px;
+			position: absolute;
+			left: 10px;
+			z-index: 1;
+			}
+			 
+			.legend h4 {
+			margin: 0 0 10px;
+			}
+			 
+			.legend div span {
+			border-radius: 50%;
+			display: inline-block;
+			height: 9px;
+			margin-left: 5px;
+			width: 10px;
+			}
+
+    </style>
+    <div id="button"></div>
+    <div id='map'>
+	<div id='legend' class='legend'>
+<h4>Project Type</h4>
+<div><span style='background-color: #fbb03b'></span>Multi-Family</div>
+<div><span style='background-color: #223b53'></span>Single Family</div>
+<div><span style='background-color: #3bb2d0'></span>Economic and Community Development</div>
+<div><span style='background-color: #e55e5e'></span>Homebuying Assistance</div>
+<div><span style='background-color: #ccc'></span>Unknown</div>
+</div>
+    <script>
+            mapboxgl.accessToken = 'pk.eyJ1IjoiZ2VzY2xhc3MiLCJhIjoiY2pza3M4bzJyMGt6aTQ5cGk5cDZqbnNpNCJ9.3X8cEl_LT7fbHaJuU0oVIg';
+    </script>
+        
+        <ul class="topnav" id="ulclass">
+        
+            
+        <li><a id="CMFitem" style="height:100%;" href="javascript:void(0);" onclick="addNavLayer_cmf('CMFdata2019-budwpb', 'CMFdata2019-budwpb');">Display CMF Projects</a></li>
+            
+        <li><a id="PrintItem" class="heightfix" href="javascript:void(0);" onclick="printmap();">Download Map Image</a></li>
+        <li><a id="CSVItem" class="heightfix" href="javascript:void(0);" onclick="buttoncsv();">Download to CSV</a></li>
+            
+        
+        <li><a id="ClearMapItem" class="heightfix" href="javascript:void(0);" onclick="clearmap();">Clear Map</a></li>
+    </ul>
+    </div>
+    <pre id="features"></pre>   
+    <script>
+        var script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js";
+        document.getElementsByTagName('head')[0].appendChild(script);
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZ2VzY2xhc3MiLCJhIjoiY2pza3M4bzJyMGt6aTQ5cGk5cDZqbnNpNCJ9.3X8cEl_LT7fbHaJuU0oVIg#4.0/40.082349/-85.545587/0'
+        /*
+        $("#features").hide();
+        */
+        if (!mapboxgl.supported()) {
+            alert('Your browser does not support Mapbox GL');
+        } else {
+            var map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/gesclass/cjvmhsj7s42k61cmqpjallqs6',
+                zoom: 4,
+                center: [-98.5795, 39.8282],
+                preserveDrawingBuffer: 'true',
+            });
+        }
+
+        //custom geocoder
+
+        var geocoder = new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken
+        });
+        map.addControl(geocoder, "bottom-right");
+
+        $("ul a").click(function() {
+            $(this).toggleClass("active");
+
+        });
+
+        map.on('load', function() {
+
+            $("#hidebox").click(function() {
+                // assumes element with id='button'
+                $("#features").fadeToggle("slow");
+            });
+
+            document.getElementById('features').innerHTML = '<h3>' + 'Zoom In To Display Data  ' + '</h3>'
+            
+
+            //CMF data
+			 map.addSource('CMFdata2019-budwpb', {
+                "type": "vector",
+                "url": "mapbox://gesclass.5zhtqf20",
+				});
+
+			map.addLayer({
+                "id": "CMFdata2019-budwpb",
+                "type": "circle",
+                "source": "CMFdata2019-budwpb",
+                "source-layer": "CMFdata2019-budwpb",
+                "layout": {
+                    "visibility": "none",
+                },
+                "paint": {
+                    'circle-radius': {
+							'base': 2,
+							'stops': [[6, 2.5], [20, 18]]
+							},
+                    'circle-color': [
+					'match',
+					['get', 'Project Type'],
+					'MF - New Development', '#fbb03b',
+					'MF - Preservation w/o Rehab', '#fbb03b',
+					'MF - Preservation WITH Rehab', '#fbb03b',
+					'MF - Rehab', '#fbb03b',
+					'SF - New Development', '#223b53',
+					'SF - Preservation w/o Rehab', '#223b53',
+					'SF - Rehab', '#223b53',
+					'SF - Preservation WITH Rehab', '#223b53',
+					'Purchase (Home Purchase Assistance)','#e55e5e',
+					'EDA/CSF', '#3bb2d0',
+					/* other */ '#ccc'
+					]
+					}
+
+            });
+
+            
+          
+
+        
+            geocoder.on('result', function(ev) {
+                map.getSource('single-point').setData(ev.result.geometry);
+            });
+
+            /*<!-- clear map to start -->*/
+            clearmap();
+            $("#ClearMapItem").toggleClass("active");
+            /*<!-- set map zoom -->*/
+        });
+        
+
+       
+        map.on('mousemove', function(e) {
+            //if zoom equal...
+            if (map.getZoom() > 10) {
+
+                var featurespoint = map.queryRenderedFeatures(e.point, {
+                    layers: ['CMFdata2019-budwpb']
+                });
+                // Change the cursor style as a UI indicator. put this on in sepereate mousmove function and add e.point,
+                map.getCanvas().style.cursor = (featurespoint.length) ? 'pointer' : '';
+            }
+
+        });
+	window.onload = function() {
+            map.on('mousemove', function(e) {
+                if (map.getLayer('CMFdata2019-budwpb')) {
+                    var features = map.queryRenderedFeatures({
+                        layers: ['CMFdata2019-budwpb']
+                    })
+                }
+				})
+				};
+
+
+
+    
+
+
+        function addNavLayer_cmf(id) {
+            var visibility = map.getLayoutProperty(id, 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty(id, 'visibility', 'none');
+            } else {
+                map.setLayoutProperty(id, 'visibility', 'visible');
+            }
+        }
+
+
+
+        function numberWithCommas(x) {
+            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function unique(array) {
+            return array.filter(function(el, index, arr) {
+                return index === arr.indexOf(el);
+            });
+        }
+
+        function buttoncsv() {
+            var features = map.queryRenderedFeatures({
+                layers: ['cmfdata2019-budwpb']
+            });
+
+            
+            var jsonobjProj = JSON.stringify(features, null, 2);
+            var newArrProj = JSON.parse(jsonobjProj);
+            var propsProj = [
+['Completed Owner Occupied', 'ProjectY', 'Rental - Number of Cumulative Units Occupied: Extremely Low-Income Occupants', 'Mask Geocoded Census Tract FIPS_x', 'Project Type', 'Rental - Number of Cumulative Units Completed: Non-Eligible Occupants', 'Eligible Project Costs from Related Public Dollars', 'Eligible Project Costs from 3rd Party Public Dollars', 'Owner-Occupied - Number of Units Sold to First-Time Homebuyers: Low-Income Homebuyers', 'Rental - Number of Cumulative Units Occupied: Very Low-Income Occupants', 'Owner-Occupied - Number of Cumulative Units Completed: Very Low-Income Occupants', 'Owner-Occupied - Number of Cumulative Units Occupied: Non-Eligible Occupants', 'Rental - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Very Low-Income Occupants', 'Owner-Occupied - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Low-Income Occupants', 'Total Project Costs', 'Type of Disbursement', 'Additional Locations', 'Disbursements to Date', 'Mask Geocoded Census Tract FIPS Location_x', 'Owner-Occupied - Number of Projected Income Eligible Units', 'Owner-Occupied - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Other Eligible Occupants', 'Completed Rental Units', 'Owner-Occupied - Minimum Sales Price', 'Date of First Disbursement', 'Homebuyer Income Category', 'Project State', 'Rental - Total Number of Projected Units', 'Owner-Occupied - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Extremely Low-Income Occupants', 'Rental - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Non-Eligible Occupants', 'Rental - Number of Cumulative Units Completed: Low-Income Occupants', 'EDA Square Footage', 'Owner-Occupied - Number of Units Sold to First-Time Homebuyers: Non-Eligible Homebuyers', 'Owner-Occupied - Number of Cumulative Units Occupied: Very Low-Income Occupants', 'Project Address', 'Owner-Occupied - Number of Cumulative Units Completed: Non-Eligible Occupants', 'Rental - Number of Cumulative Units Completed: Very Low-Income Occupants', 'Rental - Number of Cumulative Units Occupied: Non-Eligible Occupants', 'Project Zip Code (5)', 'Owner-Occupied - Number of Units Sold to First-Time Homebuyers: Very Low-Income Homebuyers', 'Project Number', 'Recipient Number', 'Rental - Number of Cumulative Units Completed: Other Eligible Occupants', 'Disbursement Status', 'Total Eligible Project Costs', 'Completion Date', 'Project City', 'Owner-Occupied - Number of Cumulative Units Occupied: Other Eligible Occupants', 'Owner-Occupied - Number of Units Sold to First-Time Homebuyers: Extremely Low-Income Homebuyers', 'new_index', 'Rental - Number of Cumulative Units Completed: Extremely Low-Income Occupants', 'Owner-Occupied - Number of Cumulative Units Occupied: Extremely Low-Income Occupants', 'Rental - Number of Projected Income Eligible Units', 'Interest Rate', 'Use of Low-Income Housing Tax Credit Dollars', 'Rental - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Low-Income Occupants', 'Owner-Occupied - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Very Low-Income Occupants', 'EDA Type', 'Low-Income Occupants', 'Owner-Occupied - Number of Cumulative Units Completed: Low-Income Occupants', 'Date Funds Committed', 'Owner-Occupied - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Non-Eligible Occupants', 'Eligible Project Costs from 3rd Party Private Dollars', 'Eligible Project Costs from Related Private Dollars', 'Commitment Date', 'Project Status', 'Rental - Number of Cumulative Units Occupied: Low-Income Occupants', 'Owner-Occupied - Maximum Sales Price', 'Stage of Investment', 'Date of Full Disbursement', 'Amount Recovered', 'Amount of committed CMF Investment', 'Owner-Occupied - Number of Units Sold to First-Time Homebuyers: Other Eligible Homebuyers', 'Rental - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Other Eligible Occupants', 'Development Activity Project Number', 'Owner-Occupied - Number of Cumulative Units Completed: Other Eligible Occupants', 'Owner-Occupied - Total Number of Projected Units', 'Use of Funds', 'Rental - Number of Cumulative Units Occupied: Other Eligible Occupants', 'First-Time Homebuyer', 'Rental - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Extremely Low-Income Occupants', 'Owner-Occupied - Number of Cumulative Units Completed: Extremely Low-Income Occupants']
+            ];
+            
+            $.each(newArrProj, function(index, value) {
+                 propsProj.push([value.properties['Completed Owner Occupied'],
+value.properties ['Rental - Number of Cumulative Units Occupied: Extremely Low-Income Occupants'],
+value.properties ['Mask Geocoded Census Tract FIPS_x'],
+value.properties ['Project Type'],
+value.properties ['Rental - Number of Cumulative Units Completed: Non-Eligible Occupants'],
+value.properties ['Eligible Project Costs from Related Public Dollars'],
+value.properties ['Eligible Project Costs from 3rd Party Public Dollars'],
+value.properties ['Owner-Occupied - Number of Units Sold to First-Time Homebuyers: Low-Income Homebuyers'],
+value.properties ['Rental - Number of Cumulative Units Occupied: Very Low-Income Occupants'],
+value.properties ['Owner-Occupied - Number of Cumulative Units Completed: Very Low-Income Occupants'],
+value.properties ['Owner-Occupied - Number of Cumulative Units Occupied: Non-Eligible Occupants'],
+value.properties ['Rental - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Very Low-Income Occupants'],
+value.properties ['Owner-Occupied - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Low-Income Occupants'],
+value.properties ['Total Project Costs'],
+value.properties ['Type of Disbursement'],
+value.properties ['Additional Locations'],
+value.properties ['Disbursements to Date'],
+value.properties ['Mask Geocoded Census Tract FIPS Location_x'],
+value.properties ['Owner-Occupied - Number of Projected Income Eligible Units'],
+value.properties ['Owner-Occupied - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Other Eligible Occupants'],
+value.properties ['Completed Rental Units'],
+value.properties ['Owner-Occupied - Minimum Sales Price'],
+value.properties ['Date of First Disbursement'],
+value.properties ['Homebuyer Income Category'],
+value.properties ['Project State'],
+value.properties ['Rental - Total Number of Projected Units'],
+value.properties ['Owner-Occupied - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Extremely Low-Income Occupants'],
+value.properties ['Rental - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Non-Eligible Occupants'],
+value.properties ['Rental - Number of Cumulative Units Completed: Low-Income Occupants'],
+value.properties ['EDA Square Footage'],
+value.properties ['Owner-Occupied - Number of Units Sold to First-Time Homebuyers: Non-Eligible Homebuyers'],
+value.properties ['Owner-Occupied - Number of Cumulative Units Occupied: Very Low-Income Occupants'],
+value.properties ['Project Address'],
+value.properties ['Owner-Occupied - Number of Cumulative Units Completed: Non-Eligible Occupants'],
+value.properties ['Rental - Number of Cumulative Units Completed: Very Low-Income Occupants'],
+value.properties ['Rental - Number of Cumulative Units Occupied: Non-Eligible Occupants'],
+value.properties ['Project Zip Code (5)'],
+value.properties ['Owner-Occupied - Number of Units Sold to First-Time Homebuyers: Very Low-Income Homebuyers'],
+value.properties ['Project Number'],
+value.properties ['Recipient Number'],
+value.properties ['Rental - Number of Cumulative Units Completed: Other Eligible Occupants'],
+value.properties ['Disbursement Status'],
+value.properties ['Total Eligible Project Costs'],
+value.properties ['Completion Date'],
+value.properties ['Project City'],
+value.properties ['Owner-Occupied - Number of Cumulative Units Occupied: Other Eligible Occupants'],
+value.properties ['Owner-Occupied - Number of Units Sold to First-Time Homebuyers: Extremely Low-Income Homebuyers'],
+value.properties ['new_index'],
+value.properties ['Rental - Number of Cumulative Units Completed: Extremely Low-Income Occupants'],
+value.properties ['Owner-Occupied - Number of Cumulative Units Occupied: Extremely Low-Income Occupants'],
+value.properties ['Rental - Number of Projected Income Eligible Units'],
+value.properties ['Interest Rate'],
+value.properties ['Use of Low-Income Housing Tax Credit Dollars'],
+value.properties ['Rental - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Low-Income Occupants'],
+value.properties ['Owner-Occupied - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Very Low-Income Occupants'],
+value.properties ['EDA Type'],
+value.properties ['Low-Income Occupants'],
+value.properties ['Owner-Occupied - Number of Cumulative Units Completed: Low-Income Occupants'],
+value.properties ['Date Funds Committed'],
+value.properties ['Owner-Occupied - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Non-Eligible Occupants'],
+value.properties ['Eligible Project Costs from 3rd Party Private Dollars'],
+value.properties ['Eligible Project Costs from Related Private Dollars'],
+value.properties ['Commitment Date'],
+value.properties ['Project Status'],
+value.properties ['Rental - Number of Cumulative Units Occupied: Low-Income Occupants'],
+value.properties ['Owner-Occupied - Maximum Sales Price'],
+value.properties ['Stage of Investment'],
+value.properties ['Date of Full Disbursement'],
+value.properties ['Amount Recovered'],
+value.properties ['Amount of committed CMF Investment'],
+value.properties ['Owner-Occupied - Number of Units Sold to First-Time Homebuyers: Other Eligible Homebuyers'],
+value.properties ['Rental - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Other Eligible Occupants'],
+value.properties ['Development Activity Project Number'],
+value.properties ['Owner-Occupied - Number of Cumulative Units Completed: Other Eligible Occupants'],
+value.properties ['Owner-Occupied - Total Number of Projected Units'],
+value.properties ['Use of Funds'],
+value.properties ['Rental - Number of Cumulative Units Occupied: Other Eligible Occupants'],
+value.properties ['First-Time Homebuyer'],
+value.properties ['Rental - Dollars Expended (CMF and Leveraged Funds) for Units Completed: Extremely Low-Income Occupants'],
+value.properties ['Owner-Occupied - Number of Cumulative Units Completed: Extremely Low-Income Occupants']
+]);
+                    return propsProj;
+              }
+            );
+            
+            {
+                {
+                alasql.promise('SELECT * INTO CSV("CMF-Projects-InMap.csv", {headers:false, separator:","}) FROM ?', [propsProj]);}
+            $("#CSVItem").toggleClass("active");
+            } 
+        }
+        
+            //make sure that the original projects goes away when you click on a congressional district
+
+            /* console.log("CONGRESS HIGHLIGHTED:");*/
+            /*console.log(features3);*/
+            //if (['cmfdata2019-budwpb']= "visible") {
+               // alasql.promise('SELECT * INTO CSV("CMF-Projects-InMap.csv", {headers:false, separator:","}) FROM ?', [propsProj2]);
+           // } 
+
+
+            
+
+
+        function clearmap() {
+            $("ul a").removeClass("active");
+            $("#ClearMapItem").removeClass("active");
+            displaylist = ['cmfdata2019-budwpb']
+
+            for (var i = 0; i < displaylist.length; i++) {
+                map.setLayoutProperty(displaylist[i], 'visibility', 'none');
+            }
+            
+            map.flyTo({
+                zoom: 4,
+                center: [
+                    -98.5795,
+                    39.8282
+                ],
+                speed: 2, // make the flying slow
+                curve: 1, // change the speed at which it zooms out
+            });
+            $("#ClearMapItem").toggleClass("active");
+
+        }
+
+        function printmap() {
+            /*<!-- var FileSaver = require('file-saver'); -->*/
+            var d = new Date();
+            var t = new Date();
+            var load = map.loaded();
+
+            /*<!-- console.log(load); -->*/
+            var data = this.map.getCanvas().toDataURL('image/png', 1.0);
+            /*<!-- console.log(data); -->*/
+            var blob = dataURLtoBlob(data);
+            /*<!-- console.log(blob); -->*/
+            saveAs(blob, 'Map - ' + d.toDateString() + " " + t.getHours() + ":" + t.getMinutes() + '.png');
+            $("#PrintItem").toggleClass("active");
+        }
+
+        function OpenInNewTab(url) {
+            var win = window.open(url, '_blank');
+            win.focus();
+        }
+
+        function median(values) {
+            values.sort(function(a, b) {
+                return a - b;
+            });
+
+            var half = Math.floor(values.length / 2);
+            if (values.length % 2)
+                return values[half];
+            else
+                return (values[half - 1] + values[half]) / 2.0;
+        }
+
+        function dataURLtoBlob(dataurl) {
+            var arr = dataurl.split(','),
+                mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[1]),
+                n = bstr.length,
+                u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], {
+                type: mime
+            });
+        }
+
+    </script>
+</body>
+</html>
